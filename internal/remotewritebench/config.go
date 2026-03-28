@@ -23,6 +23,7 @@ type Config struct {
 	Duration            time.Duration
 	Timeout             time.Duration
 	UTF8Label           bool
+	Realistic           bool
 	StartTime           time.Time
 }
 

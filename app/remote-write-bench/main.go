@@ -28,6 +28,7 @@ func main() {
 		timeout             = fs.Duration("timeout", 10*time.Second, "per-request timeout")
 		duration            = fs.Duration("duration", 0, "total benchmark duration; 0 runs until interrupted")
 		utf8Label           = fs.Bool("utf8-label", false, "append a fixed UTF-8 label 中文label=value to every generated series")
+		realistic           = fs.Bool("realistic", false, "enable realistic mode: generate series with Kubernetes-like labels (job, namespace, pod, container, instance) and simulate pod churn")
 	)
 
 	fs.Usage = cliutil.NewUsage(fs, cliutil.Tool{
@@ -50,6 +51,7 @@ func main() {
 		Duration:            *duration,
 		Timeout:             *timeout,
 		UTF8Label:           *utf8Label,
+		Realistic:           *realistic,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

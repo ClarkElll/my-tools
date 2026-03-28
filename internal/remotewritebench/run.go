@@ -49,6 +49,7 @@ type cycleRunner struct {
 	stats         *statsRecorder
 	batches       [][]*seriesState
 	baseTimestamp int64
+	pool          *realisticPool // non-nil in realistic mode
 }
 
 func Run(ctx context.Context, logger *slog.Logger, cfg Config) error {
@@ -65,9 +66,21 @@ func Run(ctx context.Context, logger *slog.Logger, cfg Config) error {
 		defer cancel()
 	}
 
-	seriesStates, err := buildSeriesStates(cfg)
-	if err != nil {
-		return err
+	var (
+		seriesStates []*seriesState
+		pool         *realisticPool
+	)
+	if cfg.Realistic {
+		pool, err = buildRealisticSeriesStates(cfg)
+		if err != nil {
+			return err
+		}
+		seriesStates = pool.allStates()
+	} else {
+		seriesStates, err = buildSeriesStates(cfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	benchMetrics := newBenchMetrics(cfg)
@@ -95,6 +108,7 @@ func Run(ctx context.Context, logger *slog.Logger, cfg Config) error {
 		"duration", formatOptionalDuration(cfg.Duration),
 		"timeout", cfg.Timeout,
 		"utf8_label", cfg.UTF8Label,
+		"realistic", cfg.Realistic,
 	)
 
 	startedAt := time.Now()
@@ -106,6 +120,7 @@ func Run(ctx context.Context, logger *slog.Logger, cfg Config) error {
 		stats:         stats,
 		batches:       splitSeriesStates(seriesStates, cfg.MaxSeriesPerRequest),
 		baseTimestamp: cfg.StartTime.UnixMilli(),
+		pool:          pool,
 	}
 
 	if err := schedutil.Run(ctx, schedutil.Options{
@@ -150,7 +165,13 @@ func splitSeriesStates(states []*seriesState, batchSize int) [][]*seriesState {
 }
 
 func (r cycleRunner) run(ctx context.Context, job schedutil.Job) {
-	for _, batch := range r.batches {
+	batches := r.batches
+	if r.pool != nil {
+		r.pool.maybeChurn(job.Sequence)
+		batches = splitSeriesStates(r.pool.allStates(), r.cfg.MaxSeriesPerRequest)
+	}
+
+	for _, batch := range batches {
 		if ctx.Err() != nil {
 			return
 		}
