@@ -1,0 +1,5 @@
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY bin/remote-write-bench /remote-write-bench
+
+ENTRYPOINT ["/remote-write-bench"]
