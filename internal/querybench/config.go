@@ -25,6 +25,7 @@ type Config struct {
 	Offset      time.Duration
 	Window      time.Duration
 	Match       []string
+	ListenAddr  string
 }
 
 func (c Config) Interval() time.Duration {

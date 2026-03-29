@@ -31,6 +31,7 @@ func main() {
 		offset      = fs.Duration("offset", 5*time.Minute, "end = now()-offset for query_range and series")
 		window      = fs.Duration("window", time.Hour, "time window: start = now()-offset-window for query_range and series")
 		match       = fs.String("match", "", "match[] selector for series endpoint (comma-separated); defaults to -query value")
+		listenAddr  = fs.String("listen-addr", "", "address to expose Prometheus metrics on (e.g. :9091); empty disables the metrics server")
 	)
 
 	fs.Usage = cliutil.NewUsage(fs, cliutil.Tool{
@@ -65,6 +66,7 @@ func main() {
 		Offset:      *offset,
 		Window:      *window,
 		Match:       matchSlice,
+		ListenAddr:  *listenAddr,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

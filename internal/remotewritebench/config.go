@@ -24,6 +24,7 @@ type Config struct {
 	Timeout             time.Duration
 	UTF8Label           bool
 	Realistic           bool
+	ListenAddr          string
 	StartTime           time.Time
 }
 

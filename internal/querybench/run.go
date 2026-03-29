@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/ClarkElll/my-tools/internal/metricsutil"
 	"github.com/ClarkElll/my-tools/internal/schedutil"
 )
 
@@ -84,6 +85,11 @@ func Run(ctx context.Context, logger *slog.Logger, cfg Config) error {
 	}
 
 	stats := &statsRecorder{}
+
+	if _, err := metricsutil.Start(ctx, logger, metricsutil.Config{ListenAddr: cfg.ListenAddr}); err != nil {
+		return err
+	}
+
 	q := &querier{
 		cfg:    cfg,
 		client: client,

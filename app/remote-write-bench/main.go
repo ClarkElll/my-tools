@@ -29,6 +29,7 @@ func main() {
 		duration            = fs.Duration("duration", 0, "total benchmark duration; 0 runs until interrupted")
 		utf8Label           = fs.Bool("utf8-label", false, "append a fixed UTF-8 label 中文label=value to every generated series")
 		realistic           = fs.Bool("realistic", false, "enable realistic mode: generate series with Kubernetes-like labels (job, namespace, pod, container, instance) and simulate pod churn")
+		listenAddr          = fs.String("listen-addr", "", "address to expose Prometheus metrics on (e.g. :9091); empty disables the metrics server")
 	)
 
 	fs.Usage = cliutil.NewUsage(fs, cliutil.Tool{
@@ -52,6 +53,7 @@ func main() {
 		Timeout:             *timeout,
 		UTF8Label:           *utf8Label,
 		Realistic:           *realistic,
+		ListenAddr:          *listenAddr,
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

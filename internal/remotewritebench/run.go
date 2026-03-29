@@ -15,6 +15,7 @@ import (
 	"github.com/golang/snappy"
 	"github.com/prometheus/prometheus/prompb"
 
+	"github.com/ClarkElll/my-tools/internal/metricsutil"
 	"github.com/ClarkElll/my-tools/internal/schedutil"
 )
 
@@ -86,6 +87,10 @@ func Run(ctx context.Context, logger *slog.Logger, cfg Config) error {
 	benchMetrics := newBenchMetrics(cfg)
 	benchMetrics.runStarted()
 	defer benchMetrics.runCompleted()
+
+	if _, err := metricsutil.Start(ctx, logger, metricsutil.Config{ListenAddr: cfg.ListenAddr}, benchMetrics.metricSet()); err != nil {
+		return err
+	}
 
 	stats := &statsRecorder{metrics: benchMetrics}
 	client := &http.Client{
