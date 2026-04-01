@@ -3,6 +3,7 @@ package querybench
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"sync/atomic"
 	"time"
@@ -77,10 +78,17 @@ func Run(ctx context.Context, logger *slog.Logger, cfg Config) error {
 
 	client := &http.Client{
 		Transport: &http.Transport{
-			Proxy:               http.ProxyFromEnvironment,
-			MaxIdleConns:        cfg.Concurrency * 4,
-			MaxIdleConnsPerHost: cfg.Concurrency * 4,
-			IdleConnTimeout:     90 * time.Second,
+			Proxy: http.ProxyFromEnvironment,
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			ForceAttemptHTTP2:     true,
+			MaxIdleConns:          cfg.Concurrency * 4,
+			MaxIdleConnsPerHost:   cfg.Concurrency * 4,
+			IdleConnTimeout:       90 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
 		},
 	}
 
